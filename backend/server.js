@@ -1,0 +1,147 @@
+// server.js
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
+const pdfParse = require("pdf-parse");
+const mammoth = require("mammoth");
+const session = require("express-session");
+const bcrypt = require("bcrypt");
+
+// Ensure fetch is available in Node
+let fetch = global.fetch;
+if (!fetch) fetch = require("node-fetch");
+
+dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
+app.use(express.json());
+app.use(session({
+  secret: process.env.SESSION_SECRET || "supersecret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false },
+}));
+
+const upload = multer({ dest: "uploads/" });
+const users = [];
+
+// Register Route
+app.post("/api/register", async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password)
+    return res.status(400).json({ message: "All fields are required." });
+
+  const exists = users.find(u => u.email === email);
+  if (exists)
+    return res.status(400).json({ message: "User already exists." });
+
+  const hashed = await bcrypt.hash(password, 10);
+  users.push({ name, email, password: hashed });
+  return res.status(201).json({ message: "Registered successfully." });
+});
+
+// Login Route
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find(u => u.email === email);
+  if (!user) return res.status(401).json({ message: "Invalid credentials." });
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ message: "Invalid credentials." });
+
+  req.session.user = { name: user.name, email };
+  res.json({ message: "Login successful." });
+});
+
+// Upload Route (supports .txt, .pdf, .docx)
+app.post("/api/upload", upload.single("file"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No file uploaded." });
+
+  const filePath = path.join(__dirname, req.file.path);
+  const ext = path.extname(req.file.originalname).toLowerCase();
+
+  try {
+    let content = "";
+
+    if (ext === ".txt") {
+      content = fs.readFileSync(filePath, "utf-8");
+    } else if (ext === ".pdf") {
+      const data = await pdfParse(fs.readFileSync(filePath));
+      content = data.text;
+    } else if (ext === ".docx") {
+      const result = await mammoth.extractRawText({ path: filePath });
+      content = result.value;
+    } else {
+      return res.status(400).json({ message: "Unsupported file format." });
+    }
+
+    fs.unlinkSync(filePath); // delete temp file
+    res.json({ message: "File uploaded", content });
+  } catch (err) {
+    console.error("File parsing error:", err);
+    res.status(500).json({ message: "Failed to read file." });
+  }
+});
+
+// 🧠 /api/ask route — sends question to Together.ai and OpenRouter
+app.post("/api/ask", async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ message: "Question required." });
+
+  const togetherKey = process.env.TOGETHER_API_KEY;
+  const llamaKey = process.env.OPENROUTER_API_KEY;
+
+  try {
+    const [togetherRes, llamaRes] = await Promise.all([
+      fetch("https://api.together.xyz/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${togetherKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+          messages: [{ role: "user", content: question }],
+          max_tokens: 512,
+        }),
+      }),
+      fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${llamaKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "meta-llama/llama-3-70b-instruct",
+          messages: [{ role: "user", content: question }],
+          max_tokens: 512,
+        }),
+      }),
+    ]);
+
+    const togetherData = await togetherRes.json();
+    const llamaData = await llamaRes.json();
+
+    const togetherOutput = togetherData?.choices?.[0]?.message?.content || "Error from Together.ai";
+    const llamaOutput = llamaData?.choices?.[0]?.message?.content || "Error from LLaMA";
+
+    res.json({ together: togetherOutput, llama: llamaOutput });
+  } catch (err) {
+    console.error("AI API error:", err);
+    res.status(500).json({ message: "AI request failed." });
+  }
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+});
