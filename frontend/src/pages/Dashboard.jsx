@@ -6,6 +6,8 @@ const Dashboard = () => {
   const [question, setQuestion] = useState("");
   const [togetherResponse, setTogetherResponse] = useState("");
   const [llamaResponse, setLlamaResponse] = useState("");
+  const [rankedBetter, setRankedBetter] = useState("");
+  const [rankedReason, setRankedReason] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
@@ -36,10 +38,14 @@ const Dashboard = () => {
       const res = await axios.post("http://localhost:5000/api/ask", { question: prompt });
       setTogetherResponse(res.data.together);
       setLlamaResponse(res.data.llama);
+      setRankedBetter(res.data.ranking?.better || "Unknown");
+      setRankedReason(res.data.ranking?.reason || "No reason provided.");
     } catch (err) {
       console.error("AI error:", err);
       setTogetherResponse("Error from Together.ai");
       setLlamaResponse("Error from LLaMA");
+      setRankedBetter("Error");
+      setRankedReason("Failed to determine which answer is better.");
     } finally {
       setLoading(false);
     }
@@ -83,7 +89,7 @@ const Dashboard = () => {
         {loading && <p className="text-center text-gray-500 mb-6">⏳ Thinking...</p>}
 
         {/* AI Response Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-gray-100 p-5 rounded-lg shadow-inner">
             <h2 className="text-xl font-semibold text-teal-700 mb-2">💬 Together.ai Response</h2>
             <p className="whitespace-pre-wrap text-sm">{togetherResponse}</p>
@@ -93,6 +99,15 @@ const Dashboard = () => {
             <p className="whitespace-pre-wrap text-sm">{llamaResponse}</p>
           </div>
         </div>
+
+        {/* Ranking Section */}
+        {(rankedBetter || rankedReason) && (
+          <div className="bg-yellow-50 border border-yellow-300 p-5 rounded-lg shadow mb-4">
+            <h3 className="text-lg font-bold text-yellow-800 mb-2">🔍 AI Ranking Result</h3>
+            <p className="mb-1"><strong>🟢 Better Answer:</strong> {rankedBetter === "A" ? "Together.ai" : rankedBetter === "B" ? "LLaMA" : rankedBetter}</p>
+            <p><strong>💡 Reason:</strong> {rankedReason}</p>
+          </div>
+        )}
       </div>
     </div>
   );

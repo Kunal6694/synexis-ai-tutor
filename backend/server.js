@@ -92,7 +92,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// 🧠 /api/ask route — sends question to Together.ai and OpenRouter
+// AI Answer & Ranking Route
 app.post("/api/ask", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ message: "Question required." });
@@ -134,7 +134,54 @@ app.post("/api/ask", async (req, res) => {
     const togetherOutput = togetherData?.choices?.[0]?.message?.content || "Error from Together.ai";
     const llamaOutput = llamaData?.choices?.[0]?.message?.content || "Error from LLaMA";
 
-    res.json({ together: togetherOutput, llama: llamaOutput });
+    // Ranking prompt to LLaMA
+    const rankingPrompt = `
+You are an expert evaluator. Given the user's question and two AI-generated answers, evaluate which answer is better and explain why.
+
+Question: "${question}"
+
+Answer A (from Together AI):
+${togetherOutput}
+
+Answer B (from LLaMA 3):
+${llamaOutput}
+
+Please answer in this format:
+
+{
+  "better": "A" or "B",
+  "reason": "Your reasoning here"
+}
+`;
+
+    const rankingRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${llamaKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3-70b-instruct",
+        messages: [{ role: "user", content: rankingPrompt }],
+        max_tokens: 256,
+      }),
+    });
+
+    const rankingData = await rankingRes.json();
+    const rankingText = rankingData?.choices?.[0]?.message?.content || "Could not rank the answers.";
+
+    let parsedRanking;
+    try {
+      parsedRanking = JSON.parse(rankingText);
+    } catch {
+      parsedRanking = { better: "Unknown", reason: rankingText };
+    }
+
+    res.json({
+      together: togetherOutput,
+      llama: llamaOutput,
+      ranking: parsedRanking,
+    });
   } catch (err) {
     console.error("AI API error:", err);
     res.status(500).json({ message: "AI request failed." });
