@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Connect to MongoDB
+// ===================== 🔗 MongoDB =====================
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -24,12 +24,11 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log("✅ Connected to MongoDB"))
 .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Import User model
 const User = require("./models/User");
 
-// Middleware
+// ===================== 🔧 Middleware =====================
 app.use(cors({
-  origin: "https://synexis-frontend.onrender.com", // ✅ Replace with your deployed frontend URL
+  origin: "https://synexis-frontend.onrender.com", // ✅ Your deployed frontend
   credentials: true,
 }));
 
@@ -40,15 +39,14 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,      // ✅ true for HTTPS (Render)
-    sameSite: "none",  // ✅ required for cross-origin
-  },
+    secure: true,            // ✅ Always true for HTTPS on Render
+    sameSite: "none",        // ✅ Needed for cross-origin cookies
+  }
 }));
 
 const upload = multer({ dest: "uploads/" });
 
-
-// ===================== 🔐 AUTH ROUTES ===================== //
+// ===================== 🔐 Auth Routes =====================
 
 // Register
 app.post("/api/register", async (req, res) => {
@@ -88,7 +86,7 @@ app.post("/api/logout", (req, res) => {
   });
 });
 
-// Check if user is authenticated
+// Auth check
 app.get("/api/check-auth", (req, res) => {
   if (req.session.user) {
     res.json({ authenticated: true, user: req.session.user });
@@ -97,9 +95,7 @@ app.get("/api/check-auth", (req, res) => {
   }
 });
 
-
-// ===================== 📁 FILE UPLOAD ===================== //
-
+// ===================== 📁 File Upload =====================
 app.post("/api/upload", upload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: "No file uploaded." });
 
@@ -121,7 +117,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "Unsupported file format." });
     }
 
-    fs.unlinkSync(filePath); // Delete temp file
+    fs.unlinkSync(filePath);
     res.json({ message: "File uploaded", content });
   } catch (err) {
     console.error("File parsing error:", err);
@@ -129,9 +125,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-
-// ===================== 🤖 AI Q&A + RANKING ===================== //
-
+// ===================== 🤖 AI Q&A and Ranking =====================
 app.post("/api/ask", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ message: "Question required." });
@@ -226,9 +220,7 @@ Please answer in this format:
   }
 });
 
-
-// ===================== 🚀 START SERVER ===================== //
-
+// ===================== 🚀 Start Server =====================
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server live on port ${PORT}`);
 });
