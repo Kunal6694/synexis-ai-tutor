@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 
 const Register = () => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/register', { username, password });
+      await axios.post('/register', { name, email, password });
       alert('Registration successful!');
       localStorage.setItem("isAuthenticated", "true");
       navigate('/login');
@@ -27,9 +28,17 @@ const Register = () => {
         {error && <p className="text-red-500">{error}</p>}
         <input
           type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
+          required
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full p-2 mb-4 border border-gray-300 rounded"
           required
         />

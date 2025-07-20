@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [file, setFile] = useState(null);
@@ -9,6 +10,15 @@ const Dashboard = () => {
   const [rankedBetter, setRankedBetter] = useState("");
   const [rankedReason, setRankedReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // ✅ Redirect if not authenticated
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const handleUpload = async () => {
     if (!file) return alert("Please select a file.");

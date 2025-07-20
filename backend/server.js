@@ -9,8 +9,8 @@ const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 
-// Ensure fetch is available in Node
 let fetch = global.fetch;
 if (!fetch) fetch = require("node-fetch");
 
@@ -18,9 +18,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Connect to MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("✅ Connected to MongoDB"))
+.catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Import User model
+const User = require("./models/User");
+
 // Middleware
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "http://localhost:3000", // Adjust for production
   credentials: true,
 }));
 app.use(express.json());
@@ -32,37 +43,38 @@ app.use(session({
 }));
 
 const upload = multer({ dest: "uploads/" });
-const users = [];
 
-// Register Route
+// Register
 app.post("/api/register", async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password)
     return res.status(400).json({ message: "All fields are required." });
 
-  const exists = users.find(u => u.email === email);
+  const exists = await User.findOne({ email });
   if (exists)
     return res.status(400).json({ message: "User already exists." });
 
   const hashed = await bcrypt.hash(password, 10);
-  users.push({ name, email, password: hashed });
-  return res.status(201).json({ message: "Registered successfully." });
+  const user = new User({ name, email, password: hashed });
+  await user.save();
+
+  res.status(201).json({ message: "Registered successfully." });
 });
 
-// Login Route
+// Login
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
-  const user = users.find(u => u.email === email);
+  const user = await User.findOne({ email });
   if (!user) return res.status(401).json({ message: "Invalid credentials." });
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ message: "Invalid credentials." });
 
-  req.session.user = { name: user.name, email };
+  req.session.user = { name: user.name, email: user.email };
   res.json({ message: "Login successful." });
 });
 
-// Upload Route (supports .txt, .pdf, .docx)
+// File Upload
 app.post("/api/upload", upload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: "No file uploaded." });
 
@@ -92,7 +104,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// AI Answer & Ranking Route
+// AI Answer + Ranking
 app.post("/api/ask", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ message: "Question required." });
@@ -134,7 +146,6 @@ app.post("/api/ask", async (req, res) => {
     const togetherOutput = togetherData?.choices?.[0]?.message?.content || "Error from Together.ai";
     const llamaOutput = llamaData?.choices?.[0]?.message?.content || "Error from LLaMA";
 
-    // Ranking prompt to LLaMA
     const rankingPrompt = `
 You are an expert evaluator. Given the user's question and two AI-generated answers, evaluate which answer is better and explain why.
 
@@ -188,7 +199,7 @@ Please answer in this format:
   }
 });
 
-// Start server
+// Start Server
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
