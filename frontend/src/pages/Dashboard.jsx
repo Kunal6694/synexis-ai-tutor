@@ -10,7 +10,7 @@ const Dashboard = () => {
   const [rankedBetter, setRankedBetter] = useState("");
   const [rankedReason, setRankedReason] = useState("");
   const [loading, setLoading] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
+ 
   const navigate = useNavigate();
 
   
@@ -55,7 +55,7 @@ const Dashboard = () => {
     }
   };
 
-  if (!authChecked) return <p className="text-center mt-10 text-gray-500">🔐 Checking session...</p>;
+ 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-100 to-white p-8">
