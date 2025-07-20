@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../api/axios"; // ✅ Use your configured axios instance
 import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
@@ -16,9 +16,7 @@ const AuthPage = () => {
     e.preventDefault();
     setError("");
 
-    const endpoint = isSignUp
-      ? "http://localhost:5000/api/register"
-      : "http://localhost:5000/api/login";
+    const endpoint = isSignUp ? "/api/register" : "/api/login";
 
     const payload = isSignUp
       ? { name: formData.name, email: formData.email, password: formData.password }
@@ -34,6 +32,7 @@ const AuthPage = () => {
         setFormData({ name: "", email: "", password: "" });
         setError("✅ Account created! Please log in.");
       } else {
+        localStorage.setItem("isAuthenticated", "true");
         navigate("/dashboard");
       }
     } catch (err) {
