@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -31,15 +30,20 @@ const User = require("./models/User");
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:3000", // Adjust for production
+  origin: "https://synexis-frontend.onrender.com", // ✅ Your deployed frontend URL
   credentials: true,
 }));
+
 app.use(express.json());
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "supersecret",
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false },
+  cookie: {
+    secure: true,       // ✅ Required for HTTPS
+    sameSite: "none",   // ✅ Allows cross-origin cookies
+  },
 }));
 
 const upload = multer({ dest: "uploads/" });
