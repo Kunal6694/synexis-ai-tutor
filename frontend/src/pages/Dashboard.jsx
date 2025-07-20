@@ -13,23 +13,7 @@ const Dashboard = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
 
-  // Check session via backend
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await axios.get("/api/check-auth");
-        if (!res.data.authenticated) {
-          navigate("/auth");
-        } else {
-          setAuthChecked(true);
-        }
-      } catch (err) {
-        console.error("Session check failed:", err);
-        navigate("/auth");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+  
 
   const handleUpload = async () => {
     if (!file) return alert("Please select a file.");
