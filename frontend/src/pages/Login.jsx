@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
+import axios from '../api/axios'; // ✅ Shared axios instance with Render URL + withCredentials
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -10,11 +10,17 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
-      const res = await axios.post('/api/login', { email, password });
+      const res = await axios.post(
+        '/api/login',
+        { email, password },
+        { withCredentials: true } // ✅ Make sure cookies are sent!
+      );
 
       if (res.data.message === 'Login successful.') {
-        localStorage.setItem("isAuthenticated", "true");
+        // Remove localStorage — it's NOT used by server sessions
         alert('Login successful!');
         navigate('/dashboard');
       } else {

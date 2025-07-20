@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
@@ -10,10 +10,8 @@ const Dashboard = () => {
   const [rankedBetter, setRankedBetter] = useState("");
   const [rankedReason, setRankedReason] = useState("");
   const [loading, setLoading] = useState(false);
- 
-  const navigate = useNavigate();
 
-  
+  const navigate = useNavigate();
 
   const handleUpload = async () => {
     if (!file) return alert("Please select a file.");
@@ -24,6 +22,7 @@ const Dashboard = () => {
       setLoading(true);
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true, // ✅ explicitly included for cookies on Render
       });
       setQuestion(res.data.content);
       handleAskAI(res.data.content);
@@ -39,7 +38,11 @@ const Dashboard = () => {
     if (!prompt) return;
     try {
       setLoading(true);
-      const res = await axios.post("/api/ask", { question: prompt });
+      const res = await axios.post(
+        "/api/ask",
+        { question: prompt },
+        { withCredentials: true } // ✅ cookies/session support
+      );
       setTogetherResponse(res.data.together);
       setLlamaResponse(res.data.llama);
       setRankedBetter(res.data.ranking?.better || "Unknown");
@@ -54,8 +57,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
- 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-100 to-white p-8">
@@ -107,7 +108,10 @@ const Dashboard = () => {
         {(rankedBetter || rankedReason) && (
           <div className="bg-yellow-50 border border-yellow-300 p-5 rounded-lg shadow mb-4">
             <h3 className="text-lg font-bold text-yellow-800 mb-2">🔍 AI Ranking Result</h3>
-            <p><strong>🟢 Better Answer:</strong> {rankedBetter === "A" ? "Together.ai" : rankedBetter === "B" ? "LLaMA" : rankedBetter}</p>
+            <p>
+              <strong>🟢 Better Answer:</strong>{" "}
+              {rankedBetter === "A" ? "Together.ai" : rankedBetter === "B" ? "LLaMA" : rankedBetter}
+            </p>
             <p><strong>💡 Reason:</strong> {rankedReason}</p>
           </div>
         )}

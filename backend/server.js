@@ -28,7 +28,7 @@ const User = require("./models/User");
 
 // ===================== 🔧 Middleware =====================
 app.use(cors({
-  origin: "https://synexis-frontend.onrender.com", // ✅ Your deployed frontend
+  origin: "https://synexis-frontend.onrender.com",
   credentials: true,
 }));
 
@@ -39,8 +39,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,            // ✅ Always true for HTTPS on Render
-    sameSite: "none",        // ✅ Needed for cross-origin cookies
+    secure: process.env.NODE_ENV === "production",       // ✅ Secure only in production
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",  // ✅ Cross-site in prod, relaxed locally
   }
 }));
 
