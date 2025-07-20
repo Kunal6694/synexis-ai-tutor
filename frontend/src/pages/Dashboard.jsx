@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -10,14 +10,25 @@ const Dashboard = () => {
   const [rankedBetter, setRankedBetter] = useState("");
   const [rankedReason, setRankedReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Redirect if not authenticated
+  // Check session via backend
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
+    const checkAuth = async () => {
+      try {
+        const res = await axios.get("/api/check-auth");
+        if (!res.data.authenticated) {
+          navigate("/auth");
+        } else {
+          setAuthChecked(true);
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        navigate("/auth");
+      }
+    };
+    checkAuth();
   }, [navigate]);
 
   const handleUpload = async () => {
@@ -27,12 +38,11 @@ const Dashboard = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5000/api/upload", formData, {
+      const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const content = res.data.content;
-      setQuestion(content);
-      handleAskAI(content);
+      setQuestion(res.data.content);
+      handleAskAI(res.data.content);
     } catch (err) {
       console.error("Upload error:", err);
       alert("File upload failed.");
@@ -45,7 +55,7 @@ const Dashboard = () => {
     if (!prompt) return;
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5000/api/ask", { question: prompt });
+      const res = await axios.post("/api/ask", { question: prompt });
       setTogetherResponse(res.data.together);
       setLlamaResponse(res.data.llama);
       setRankedBetter(res.data.ranking?.better || "Unknown");
@@ -61,12 +71,13 @@ const Dashboard = () => {
     }
   };
 
+  if (!authChecked) return <p className="text-center mt-10 text-gray-500">🔐 Checking session...</p>;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-100 to-white p-8">
       <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-2xl p-10">
         <h1 className="text-4xl font-bold text-teal-600 text-center mb-8">Synexis AI Dashboard</h1>
 
-        {/* File Upload + Question Input */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <input
             type="file"
@@ -98,7 +109,6 @@ const Dashboard = () => {
 
         {loading && <p className="text-center text-gray-500 mb-6">⏳ Thinking...</p>}
 
-        {/* AI Response Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-gray-100 p-5 rounded-lg shadow-inner">
             <h2 className="text-xl font-semibold text-teal-700 mb-2">💬 Together.ai Response</h2>
@@ -110,11 +120,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Ranking Section */}
         {(rankedBetter || rankedReason) && (
           <div className="bg-yellow-50 border border-yellow-300 p-5 rounded-lg shadow mb-4">
             <h3 className="text-lg font-bold text-yellow-800 mb-2">🔍 AI Ranking Result</h3>
-            <p className="mb-1"><strong>🟢 Better Answer:</strong> {rankedBetter === "A" ? "Together.ai" : rankedBetter === "B" ? "LLaMA" : rankedBetter}</p>
+            <p><strong>🟢 Better Answer:</strong> {rankedBetter === "A" ? "Together.ai" : rankedBetter === "B" ? "LLaMA" : rankedBetter}</p>
             <p><strong>💡 Reason:</strong> {rankedReason}</p>
           </div>
         )}

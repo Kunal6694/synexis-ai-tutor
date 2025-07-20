@@ -10,14 +10,13 @@ const session = require("express-session");
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 
-let fetch = global.fetch;
-if (!fetch) fetch = require("node-fetch");
+let fetch = global.fetch || require("node-fetch");
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
-// Connect to MongoDB Atlas
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -30,7 +29,7 @@ const User = require("./models/User");
 
 // Middleware
 app.use(cors({
-  origin: "https://synexis-frontend.onrender.com", // ✅ Your deployed frontend URL
+  origin: "https://synexis-frontend.onrender.com", // ✅ Replace with your deployed frontend URL
   credentials: true,
 }));
 
@@ -41,12 +40,15 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,       // ✅ Required for HTTPS
-    sameSite: "none",   // ✅ Allows cross-origin cookies
+    secure: true,      // ✅ true for HTTPS (Render)
+    sameSite: "none",  // ✅ required for cross-origin
   },
 }));
 
 const upload = multer({ dest: "uploads/" });
+
+
+// ===================== 🔐 AUTH ROUTES ===================== //
 
 // Register
 app.post("/api/register", async (req, res) => {
@@ -78,7 +80,26 @@ app.post("/api/login", async (req, res) => {
   res.json({ message: "Login successful." });
 });
 
-// File Upload
+// Logout
+app.post("/api/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie("connect.sid", { path: "/" });
+    res.json({ message: "Logged out." });
+  });
+});
+
+// Check if user is authenticated
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.user) {
+    res.json({ authenticated: true, user: req.session.user });
+  } else {
+    res.status(401).json({ authenticated: false });
+  }
+});
+
+
+// ===================== 📁 FILE UPLOAD ===================== //
+
 app.post("/api/upload", upload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: "No file uploaded." });
 
@@ -100,7 +121,7 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "Unsupported file format." });
     }
 
-    fs.unlinkSync(filePath); // delete temp file
+    fs.unlinkSync(filePath); // Delete temp file
     res.json({ message: "File uploaded", content });
   } catch (err) {
     console.error("File parsing error:", err);
@@ -108,7 +129,9 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// AI Answer + Ranking
+
+// ===================== 🤖 AI Q&A + RANKING ===================== //
+
 app.post("/api/ask", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ message: "Question required." });
@@ -203,7 +226,9 @@ Please answer in this format:
   }
 });
 
-// Start Server
+
+// ===================== 🚀 START SERVER ===================== //
+
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
