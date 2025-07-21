@@ -155,6 +155,7 @@ const Dashboard = () => {
       </header>
 
       <main className="flex-1 p-6 sm:p-8 lg:p-12 max-w-7xl mx-auto w-full">
+        {/* Your Query Input Section */}
         <section className="bg-background-card p-6 rounded-xl shadow-elevate mb-8 transition-all duration-300 hover:shadow-premium hover:-translate-y-1">
           <h2 className="text-2xl font-heading text-primary mb-6">Your Query</h2>
           
@@ -242,79 +243,98 @@ const Dashboard = () => {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div
-            className={`bg-background-card p-6 rounded-xl shadow-elevate transition-all duration-300 ease-in-out hover:shadow-premium hover:-translate-y-1
-              ${rankedBetter === "A" ? "border-2 border-primary" : "border border-gray-200"}`}
-          >
-            <h3 className="text-xl font-heading text-primary mb-4 flex items-center justify-between">
-              <span className="flex items-center"><span className="mr-3 text-2xl text-accent">💬</span> Together.ai Response</span>
-              {togetherResponse && !loadingAsk && (
-                <button
-                  onClick={() => copyToClipboard(togetherResponse)}
-                  className="text-text-secondary hover:text-primary text-sm flex items-center px-2 py-1 rounded-md transition-all duration-200 hover:bg-gray-100"
-                  title="Copy response"
-                >
-                  <span className="mr-1">📋</span> Copy
-                </button>
-              )}
-            </h3>
-            {loadingAsk ? (
-              <SkeletonLoader />
-            ) : (
-              <p className="whitespace-pre-wrap text-text-DEFAULT text-sm">
-                {togetherResponse || "Response will appear here..."}
-              </p>
-            )}
-          </div>
+        {/* Conditional rendering for AI Responses and Ranking */}
+        {(togetherResponse || llamaResponse || loadingAsk) ? (
+          <>
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Together.ai Response Card */}
+              <div
+                className={`bg-background-card p-6 rounded-xl shadow-elevate transition-all duration-300 ease-in-out hover:shadow-premium hover:-translate-y-1
+                  ${rankedBetter === "A" ? "border-2 border-primary" : "border border-gray-200"}`}
+              >
+                <h3 className="text-xl font-heading text-primary mb-4 flex items-center justify-between">
+                  <span className="flex items-center"><span className="mr-3 text-2xl text-accent">💬</span> Together.ai Response</span>
+                  {togetherResponse && !loadingAsk && (
+                    <button
+                      onClick={() => copyToClipboard(togetherResponse)}
+                      className="text-text-secondary hover:text-primary text-sm flex items-center px-2 py-1 rounded-md transition-all duration-200 hover:bg-gray-100"
+                      title="Copy response"
+                    >
+                      <span className="mr-1">📋</span> Copy
+                    </button>
+                  )}
+                </h3>
+                {loadingAsk ? (
+                  <SkeletonLoader />
+                ) : (
+                  <p className="whitespace-pre-wrap text-text-DEFAULT text-sm">
+                    {togetherResponse || "Response will appear here..."}
+                  </p>
+                )}
+              </div>
 
-          <div
-            className={`bg-background-card p-6 rounded-xl shadow-elevate transition-all duration-300 ease-in-out hover:shadow-premium hover:-translate-y-1
-              ${rankedBetter === "B" ? "border-2 border-primary" : "border border-gray-200"}`}
-          >
-            <h3 className="text-xl font-heading text-primary mb-4 flex items-center justify-between">
-              <span className="flex items-center"><span className="mr-3 text-2xl text-accent-secondary">🦙</span> LLaMA Response</span>
-              {llamaResponse && !loadingAsk && (
-                <button
-                  onClick={() => copyToClipboard(llamaResponse)}
-                  className="text-text-secondary hover:text-primary text-sm flex items-center px-2 py-1 rounded-md transition-all duration-200 hover:bg-gray-100"
-                  title="Copy response"
-                >
-                  <span className="mr-1">📋</span> Copy
-                </button>
-              )}
-            </h3>
-            {loadingAsk ? (
-              <SkeletonLoader />
-            ) : (
-              <p className="whitespace-pre-wrap text-text-DEFAULT text-sm">
-                {llamaResponse || "Response will appear here..."}
-              </p>
-            )}
-          </div>
-        </section>
+              {/* LLaMA Response Card */}
+              <div
+                className={`bg-background-card p-6 rounded-xl shadow-elevate transition-all duration-300 ease-in-out hover:shadow-premium hover:-translate-y-1
+                  ${rankedBetter === "B" ? "border-2 border-primary" : "border border-gray-200"}`}
+              >
+                <h3 className="text-xl font-heading text-primary mb-4 flex items-center justify-between">
+                  <span className="flex items-center"><span className="mr-3 text-2xl text-accent-secondary">🦙</span> LLaMA Response</span>
+                  {llamaResponse && !loadingAsk && (
+                    <button
+                      onClick={() => copyToClipboard(llamaResponse)}
+                      className="text-text-secondary hover:text-primary text-sm flex items-center px-2 py-1 rounded-md transition-all duration-200 hover:bg-gray-100"
+                      title="Copy response"
+                    >
+                      <span className="mr-1">📋</span> Copy
+                    </button>
+                  )}
+                </h3>
+                {loadingAsk ? (
+                  <SkeletonLoader />
+                ) : (
+                  <p className="whitespace-pre-wrap text-text-DEFAULT text-sm">
+                    {llamaResponse || "Response will appear here..."}
+                  </p>
+                )}
+              </div>
+            </section>
 
-        {(rankedBetter || rankedReason) && !loadingAsk && (
-          <section className="bg-gradient-to-r from-accent to-accent-secondary p-6 rounded-xl shadow-premium text-white mb-8 transition-all duration-300 hover:scale-[1.005]">
-            <h3 className="text-2xl font-heading text-center mb-4 flex items-center justify-center">
-              <span className="mr-3 text-3xl">🏆</span> AI Ranking Result <span className="ml-3 text-3xl">🏆</span>
-            </h3>
-            <div className="space-y-3 text-center">
-                <p className="flex items-center justify-center">
-                    <strong className="mr-2 text-lg">✨ Better Answer:</strong>{" "}
-                    {rankedBetter === "A" ? (
-                        <span className="font-semibold text-white">Together.ai</span>
-                    ) : rankedBetter === "B" ? (
-                        <span className="font-semibold text-white">LLaMA</span>
-                    ) : (
-                        <span className="italic text-white/90">{rankedBetter}</span>
-                    )}
-                </p>
-                <p className="flex flex-col items-center">
-                    <strong className="mb-1 text-lg">💡 Reason:</strong>{" "}
-                    <span className="text-white/90 text-sm italic">{rankedReason}</span>
-                </p>
-            </div>
+            {/* AI Ranking Result Section */}
+            {(rankedBetter || rankedReason) && !loadingAsk && (
+              <section className="bg-gradient-to-r from-accent to-accent-secondary p-6 rounded-xl shadow-premium text-white mb-8 transition-all duration-300 hover:scale-[1.005]">
+                <h3 className="text-2xl font-heading text-center mb-4 flex items-center justify-center">
+                  <span className="mr-3 text-3xl">🏆</span> AI Ranking Result <span className="ml-3 text-3xl">🏆</span>
+                </h3>
+                <div className="space-y-3 text-center">
+                    <p className="flex items-center justify-center">
+                        <strong className="mr-2 text-lg">✨ Better Answer:</strong>{" "}
+                        {rankedBetter === "A" ? (
+                            <span className="font-semibold text-white">Together.ai</span>
+                        ) : rankedBetter === "B" ? (
+                            <span className="font-semibold text-white">LLaMA</span>
+                        ) : (
+                            <span className="italic text-white/90">{rankedBetter}</span>
+                        )}
+                    </p>
+                    <p className="flex flex-col items-center">
+                        <strong className="mb-1 text-lg">💡 Reason:</strong>{" "}
+                        <span className="text-white/90 text-sm italic">{rankedReason}</span>
+                    </p>
+                </div>
+              </section>
+            )}
+          </>
+        ) : (
+          // Empty state / Feature Placeholder when no question has been asked
+          <section className="bg-background-card p-10 rounded-xl shadow-elevate text-center flex flex-col items-center justify-center min-h-[300px]">
+            <span className="text-6xl mb-6">💡</span> {/* Engaging icon */}
+            <h2 className="text-3xl font-heading text-primary mb-4">Start Your Learning Journey!</h2>
+            <p className="text-text-secondary max-w-lg mb-6">
+              Upload a document or type your question above to get AI-powered insights,
+              summaries, and answers from multiple advanced models.
+            </p>
+            <p className="text-sm text-text-secondary">It's simple, fast, and intelligent!</p>
           </section>
         )}
       </main>
