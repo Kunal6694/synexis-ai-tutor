@@ -6,7 +6,7 @@ const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,7 +26,7 @@ const AuthPage = () => {
       const response = await axios.post(endpoint, payload);
       if (isSignUp) {
         setIsSignUp(false);
-        setFormData({ name: "", email: "", password: "" }); // Clear form on successful sign-up
+        setFormData({ name: "", email: "", password: "" });
         setError("✅ Account created! Please log in.");
       } else {
         navigate("/dashboard");
@@ -37,122 +37,103 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-5xl flex bg-white shadow-lg rounded-xl overflow-hidden">
-        {/* Left Panel (Sign In promotion) */}
-        <div
-          className={`w-1/2 bg-teal-500 text-white flex flex-col items-center justify-center p-10 
-            transition-transform duration-500 ease-in-out ${
-            isSignUp ? "translate-x-0" : "-translate-x-full absolute md:relative"
-          } md:relative`}
-        >
-          {/* SynExis Branding */}
-          <h1 className="text-5xl font-extrabold mb-6 tracking-wide drop-shadow-md">
-            SynExis AI Tutor
-          </h1>
-          {/* End SynExis Branding */}
+    <div className="min-h-screen flex items-center justify-center p-6 sm:p-8 md:p-12 
+                    bg-gradient-to-br from-background-DEFAULT to-accent-secondary font-sans text-text-DEFAULT">
+      
+      <div className="w-full max-w-md bg-background-card rounded-2xl shadow-premium p-8 sm:p-10 transition-all duration-500 ease-in-out">
+        
+        <h1 className="text-5xl font-heading text-center text-primary mb-8 tracking-wider">
+          SynExis AI Tutor
+        </h1>
 
-          <h2 className="text-3xl font-bold mb-4">Welcome Back!</h2>
-          <p className="mb-6 text-center">
-            To keep connected with us please login with your personal info
-          </p>
+        <h2 className="text-3xl font-heading text-center text-primary mb-4">
+          {isSignUp ? "Create Account" : "Welcome Back"}
+        </h2>
+
+        <p className="text-center text-text-secondary mb-6 text-sm">
+          {isSignUp ? "Join us to get started with AI-powered learning." : "Sign in to continue your learning journey."}
+        </p>
+
+        <div className="flex justify-center mb-8">
           <button
-            className="px-6 py-2 border border-white rounded-full font-medium hover:bg-white hover:text-teal-500 transition"
+            onClick={() => setIsSignUp(true)}
+            className={`px-6 py-2 rounded-full font-medium text-sm transition-all duration-300 ease-in-out
+              ${isSignUp ? 'bg-primary text-white shadow-smooth' : 'bg-transparent text-primary border border-primary hover:bg-primary/90 hover:text-white hover:shadow-sm'}`}
+          >
+            Sign Up
+          </button>
+          <button
             onClick={() => setIsSignUp(false)}
+            className={`ml-4 px-6 py-2 rounded-full font-medium text-sm transition-all duration-300 ease-in-out
+              ${!isSignUp ? 'bg-primary text-white shadow-smooth' : 'bg-transparent text-primary border border-primary hover:bg-primary/90 hover:text-white hover:shadow-sm'}`}
           >
             Sign In
           </button>
         </div>
 
-        {/* Right Panel (Auth Form) */}
-        <div
-          className={`w-1/2 p-10 flex flex-col justify-center 
-            transition-transform duration-500 ease-in-out ${
-            isSignUp ? "translate-x-full md:translate-x-0" : "translate-x-0"
-          } absolute md:relative w-full md:w-1/2`}
-        > {/* FIX: Closing backtick was missing before this closing `}` */}
-          <h2 className="text-3xl font-bold text-teal-500 mb-4">
-            {isSignUp ? "Create Account" : "Sign In"}
-          </h2>
-
-          <p className="text-gray-500 mb-4 text-sm">
-            or use your email for {isSignUp ? "registration" : "login"}:
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                onChange={handleChange}
-                value={formData.name}
-                className="w-full border rounded px-4 py-2"
-                required
-              />
-            )}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {isSignUp && (
             <input
-              type="email"
-              name="email"
-              placeholder="Email"
+              type="text"
+              name="name"
+              placeholder="Name"
               onChange={handleChange}
-              value={formData.email}
-              className="w-full border rounded px-4 py-2"
+              value={formData.name}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 
+                         focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all duration-200"
               required
             />
-            {/* Password input with toggle */}
-            <div className="relative w-full">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                onChange={handleChange}
-                value={formData.password}
-                className="w-full border rounded px-4 py-2 pr-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-              >
-                {showPassword ? (
-                  <span>👁️‍🗨️</span>
-                ) : (
-                  <span>👁️</span>
-                )}
-              </button>
-            </div>
-
-            {error && (
-              <p className={`text-sm flex items-center ${error.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>
-                <span className="mr-2">
-                    {error.startsWith("✅") ? "✔️" : "❌"}
-                </span>
-                {error}
-              </p>
-            )}
-
+          )}
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            onChange={handleChange}
+            value={formData.email}
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 
+                       focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all duration-200"
+            required
+          />
+          <div className="relative w-full">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              value={formData.password}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-10 
+                         focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all duration-200"
+              required
+            />
             <button
-              type="submit"
-              className="w-full bg-teal-500 text-white py-2 rounded-full font-medium hover:bg-teal-600 transition"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-primary transition"
             >
-              {isSignUp ? "Sign Up" : "Login"}
+              {showPassword ? (
+                <span>👁️‍🗨️</span>
+              ) : (
+                <span>👁️</span>
+              )}
             </button>
-          </form>
+          </div>
 
-          {!isSignUp && (
-            <p className="text-sm mt-4">
-              Don't have an account?{" "}
-              <button
-                onClick={() => setIsSignUp(true)}
-                className="text-teal-500 font-semibold underline"
-              >
-                Sign Up
-              </button>
+          {error && (
+            <p className={`text-sm flex items-center ${error.startsWith("✅") ? "text-green-600" : "text-accent"}`}>
+              <span className="mr-2">
+                  {error.startsWith("✅") ? "✔️" : "❌"}
+              </span>
+              {error}
             </p>
           )}
-        </div>
+
+          <button
+            type="submit"
+            className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary/90 transition-all duration-200 shadow-smooth hover:shadow-md"
+          >
+            {isSignUp ? "Sign Up" : "Login"}
+          </button>
+        </form>
       </div>
     </div>
   );

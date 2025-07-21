@@ -40,8 +40,7 @@ const Dashboard = () => {
         withCredentials: true,
       });
       setQuestion(res.data.content);
-      await handleAskAI(res.data.content);
-      alert("File uploaded and content extracted!");
+      alert("File uploaded and content extracted! Now you can ask a question.");
     } catch (err) {
       console.error("Upload error:", err);
       alert(err.response?.data?.message || "File upload failed.");
@@ -130,201 +129,195 @@ const Dashboard = () => {
     }
   };
 
+  const SkeletonLoader = () => (
+    <div className="animate-pulse space-y-3">
+      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded"></div>
+      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-100 to-white p-8">
-      <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-2xl p-10">
-        <h1 className="text-4xl font-bold text-teal-600 text-center mb-8">Synexis AI Dashboard</h1>
-
-        {/* File Upload Area */}
-        <div
-          className={`border-2 border-dashed ${
-            dragOver ? "border-teal-500 bg-teal-50" : "border-gray-300 bg-gray-50"
-          } rounded-lg p-6 text-center mb-6 transition-all duration-200 ease-in-out`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".txt,.pdf,.docx"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          {file ? (
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-gray-700 font-medium">{file.name}</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleClearFile(); }}
-                className="text-red-500 hover:text-red-700 transition"
-                title="Remove file"
-              >
-                &times;
-              </button>
-            </div>
-          ) : (
-            <p className="text-gray-500">
-              Drag & drop your file here, or{" "}
-              <span className="text-teal-500 font-semibold cursor-pointer">click to browse</span>
-            </p>
-          )}
-          <p className="text-xs text-gray-400 mt-2">Accepted: .txt, .pdf, .docx</p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="min-h-screen bg-background-DEFAULT font-sans text-text-DEFAULT flex flex-col">
+      <header className="bg-white shadow-smooth p-4 sm:px-8 flex items-center justify-between">
+        <h1 className="text-2xl sm:text-3xl font-heading text-primary tracking-wide">
+          SynExis AI Tutor
+        </h1>
+        <div className="flex items-center space-x-4">
           <button
-            onClick={handleUpload}
-            className={`bg-teal-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-teal-600 transition 
-              ${loadingUpload ? "opacity-70 cursor-not-allowed" : ""}`}
-            disabled={loadingUpload || !file}
+            onClick={() => navigate('/auth')}
+            className="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition shadow-sm hover:shadow-md"
           >
-            {loadingUpload ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Uploading...
-              </span>
-            ) : (
-              "Upload File"
-            )}
-          </button>
-          <button
-            onClick={() => handleAskAI(question)}
-            className={`bg-blue-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-600 transition 
-              ${loadingAsk ? "opacity-70 cursor-not-allowed" : ""}`}
-            disabled={loadingAsk || !question}
-          >
-            {loadingAsk ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Asking AI...
-              </span>
-            ) : (
-              "Ask Question"
-            )}
+            Logout
           </button>
         </div>
+      </header>
 
-        {/* Textarea with auto-resizing */}
-        <textarea
-          ref={textareaRef}
-          rows="1"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask a question or let AI read your uploaded file..."
-          className="w-full border rounded px-4 py-3 mb-6 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none"
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Together.ai Response Card */}
+      <main className="flex-1 p-6 sm:p-8 lg:p-12 max-w-7xl mx-auto w-full">
+        <section className="bg-background-card p-6 rounded-xl shadow-elevate mb-8 transition-all duration-300 hover:shadow-premium hover:-translate-y-1">
+          <h2 className="text-2xl font-heading text-primary mb-6">Your Query</h2>
+          
           <div
-            className={`p-5 rounded-lg shadow-md transition-all duration-300 ease-in-out 
-              ${rankedBetter === "A" ? "bg-teal-50 border-2 border-teal-500 shadow-xl scale-100" : "bg-teal-50/50 hover:shadow-lg"}`}
-          > {/* FIX: Closing backtick was missing before this closing `}` */}
-            <h2 className="text-xl font-semibold text-teal-700 mb-2 flex items-center justify-between">
-              <span className="flex items-center"><span className="mr-2 text-2xl">💬</span> Together.ai Response</span>
-              {togetherResponse && (
+            className={`border-2 border-dashed ${
+              dragOver ? "border-accent bg-accent/10" : "border-gray-300 bg-background-DEFAULT"
+            } rounded-lg p-5 text-center mb-6 transition-all duration-200 ease-in-out cursor-pointer hover:border-primary hover:bg-gray-50`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".txt,.pdf,.docx"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {file ? (
+              <div className="flex items-center justify-center space-x-2 text-primary font-medium">
+                <span className="text-2xl">📄</span>
+                <span>{file.name}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleClearFile(); }}
+                  className="text-text-secondary hover:text-accent transition"
+                  title="Remove file"
+                >
+                  &times;
+                </button>
+              </div>
+            ) : (
+              <p className="text-text-secondary">
+                Drag & drop your file here, or{" "}
+                <span className="text-primary font-semibold">click to browse</span>
+              </p>
+            )}
+            <p className="text-xs text-text-secondary mt-2">Accepted: .txt, .pdf, .docx (Max 10MB)</p>
+          </div>
+
+          <textarea
+            ref={textareaRef}
+            rows="1"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Type your question here, or content will be extracted from the uploaded file..."
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-6 
+                       focus:ring-2 focus:ring-accent focus:border-transparent outline-none resize-none 
+                       transition-all duration-200 text-text-DEFAULT bg-white"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={handleUpload}
+              className={`flex items-center justify-center bg-primary text-white px-6 py-3 rounded-lg font-semibold 
+                hover:bg-primary/90 transition-all duration-200 shadow-smooth hover:shadow-md
+                ${loadingUpload || !file ? "opacity-70 cursor-not-allowed" : ""}`}
+              disabled={loadingUpload || !file}
+            >
+              {loadingUpload ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Uploading...
+                </span>
+              ) : (
+                "Upload & Extract"
+              )}
+            </button>
+            <button
+              onClick={() => handleAskAI(question)}
+              className={`flex items-center justify-center bg-accent text-white px-6 py-3 rounded-lg font-semibold 
+                hover:bg-accent/90 transition-all duration-200 shadow-smooth hover:shadow-md
+                ${loadingAsk || !question ? "opacity-70 cursor-not-allowed" : ""}`}
+              disabled={loadingAsk || !question}
+            >
+              {loadingAsk ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Asking AI...
+                </span>
+              ) : (
+                "Ask AI"
+              )}
+            </button>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div
+            className={`bg-background-card p-6 rounded-xl shadow-elevate transition-all duration-300 ease-in-out hover:shadow-premium hover:-translate-y-1
+              ${rankedBetter === "A" ? "border-2 border-primary" : "border border-gray-200"}`}
+          >
+            <h3 className="text-xl font-heading text-primary mb-4 flex items-center justify-between">
+              <span className="flex items-center"><span className="mr-3 text-2xl text-accent">💬</span> Together.ai Response</span>
+              {togetherResponse && !loadingAsk && (
                 <button
                   onClick={() => copyToClipboard(togetherResponse)}
-                  className="text-gray-500 hover:text-teal-700 text-sm flex items-center"
+                  className="text-text-secondary hover:text-primary text-sm flex items-center px-2 py-1 rounded-md transition-all duration-200 hover:bg-gray-100"
                   title="Copy response"
                 >
-                  📋 Copy
+                  <span className="mr-1">📋</span> Copy
                 </button>
               )}
-            </h2>
-            <p className="whitespace-pre-wrap text-sm text-gray-800">
-              {togetherResponse || "Response will appear here..."}
-            </p>
+            </h3>
+            {loadingAsk ? (
+              <SkeletonLoader />
+            ) : (
+              <p className="whitespace-pre-wrap text-text-DEFAULT text-sm">
+                {togetherResponse || "Response will appear here..."}
+              </p>
+            )}
           </div>
 
-          {/* LLaMA Response Card */}
           <div
-            className={`p-5 rounded-lg shadow-md transition-all duration-300 ease-in-out 
-              ${rankedBetter === "B" ? "bg-purple-50 border-2 border-purple-500 shadow-xl scale-100" : "bg-purple-50/50 hover:shadow-lg"}`}
-          > {/* FIX: Closing backtick was missing before this closing `}` */}
-            <h2 className="text-xl font-semibold text-purple-700 mb-2 flex items-center justify-between">
-              <span className="flex items-center"><span className="mr-2 text-2xl">🦙</span> LLaMA Response</span>
-              {llamaResponse && (
+            className={`bg-background-card p-6 rounded-xl shadow-elevate transition-all duration-300 ease-in-out hover:shadow-premium hover:-translate-y-1
+              ${rankedBetter === "B" ? "border-2 border-primary" : "border border-gray-200"}`}
+          >
+            <h3 className="text-xl font-heading text-primary mb-4 flex items-center justify-between">
+              <span className="flex items-center"><span className="mr-3 text-2xl text-accent-secondary">🦙</span> LLaMA Response</span>
+              {llamaResponse && !loadingAsk && (
                 <button
                   onClick={() => copyToClipboard(llamaResponse)}
-                  className="text-gray-500 hover:text-purple-700 text-sm flex items-center"
+                  className="text-text-secondary hover:text-primary text-sm flex items-center px-2 py-1 rounded-md transition-all duration-200 hover:bg-gray-100"
                   title="Copy response"
                 >
-                  📋 Copy
+                  <span className="mr-1">📋</span> Copy
                 </button>
               )}
-            </h2>
-            <p className="whitespace-pre-wrap text-sm text-gray-800">
-              {llamaResponse || "Response will appear here..."}
-            </p>
+            </h3>
+            {loadingAsk ? (
+              <SkeletonLoader />
+            ) : (
+              <p className="whitespace-pre-wrap text-text-DEFAULT text-sm">
+                {llamaResponse || "Response will appear here..."}
+              </p>
+            )}
           </div>
-        </div>
+        </section>
 
-        {/* AI Ranking Result */}
-        {(rankedBetter || rankedReason) && (
-          <div className="bg-gradient-to-r from-emerald-100 to-lime-100 border border-green-300 p-6 rounded-lg shadow-xl mb-4">
-            <h3 className="text-xl font-bold text-green-800 mb-3 flex items-center justify-center">
+        {(rankedBetter || rankedReason) && !loadingAsk && (
+          <section className="bg-gradient-to-r from-accent to-accent-secondary p-6 rounded-xl shadow-premium text-white mb-8 transition-all duration-300 hover:scale-[1.005]">
+            <h3 className="text-2xl font-heading text-center mb-4 flex items-center justify-center">
               <span className="mr-3 text-3xl">🏆</span> AI Ranking Result <span className="ml-3 text-3xl">🏆</span>
             </h3>
-            <div className="space-y-2 text-gray-700">
-                <p className="flex items-center">
-                    <strong className="mr-2 text-green-600 text-lg">✨ Better Answer:</strong>{" "}
+            <div className="space-y-3 text-center">
+                <p className="flex items-center justify-center">
+                    <strong className="mr-2 text-lg">✨ Better Answer:</strong>{" "}
                     {rankedBetter === "A" ? (
-                        <span className="font-semibold text-teal-600">Together.ai</span>
+                        <span className="font-semibold text-white">Together.ai</span>
                     ) : rankedBetter === "B" ? (
-                        <span className="font-semibold text-purple-600">LLaMA</span>
+                        <span className="font-semibold text-white">LLaMA</span>
                     ) : (
-                        <span className="italic">{rankedBetter}</span>
+                        <span className="italic text-white/90">{rankedBetter}</span>
                     )}
                 </p>
-                <p className="flex items-start">
-                    <strong className="mr-2 text-green-600 text-lg">💡 Reason:</strong>{" "}
-                    <span className="flex-1">{rankedReason}</span>
+                <p className="flex flex-col items-center">
+                    <strong className="mb-1 text-lg">💡 Reason:</strong>{" "}
+                    <span className="text-white/90 text-sm italic">{rankedReason}</span>
                 </p>
             </div>
-          </div>
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 };
