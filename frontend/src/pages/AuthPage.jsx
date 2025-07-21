@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import axios from "../api/axios"; // ✅ Use shared axios instance
+import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,10 +23,10 @@ const AuthPage = () => {
       : { email: formData.email, password: formData.password };
 
     try {
-      const response = await axios.post(endpoint, payload); // ✅ uses shared axios
+      const response = await axios.post(endpoint, payload);
       if (isSignUp) {
         setIsSignUp(false);
-        setFormData({ name: "", email: "", password: "" });
+        setFormData({ name: "", email: "", password: "" }); // Clear form on successful sign-up
         setError("✅ Account created! Please log in.");
       } else {
         navigate("/dashboard");
@@ -38,8 +39,19 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-5xl flex bg-white shadow-lg rounded-xl overflow-hidden">
-        {/* Left Panel */}
-        <div className="w-1/2 bg-teal-500 text-white flex flex-col items-center justify-center p-10">
+        {/* Left Panel (Sign In promotion) */}
+        <div
+          className={`w-1/2 bg-teal-500 text-white flex flex-col items-center justify-center p-10 
+            transition-transform duration-500 ease-in-out ${
+            isSignUp ? "translate-x-0" : "-translate-x-full absolute md:relative"
+          } md:relative`}
+        >
+          {/* SynExis Branding */}
+          <h1 className="text-5xl font-extrabold mb-6 tracking-wide drop-shadow-md">
+            SynExis AI Tutor
+          </h1>
+          {/* End SynExis Branding */}
+
           <h2 className="text-3xl font-bold mb-4">Welcome Back!</h2>
           <p className="mb-6 text-center">
             To keep connected with us please login with your personal info
@@ -52,8 +64,13 @@ const AuthPage = () => {
           </button>
         </div>
 
-        {/* Right Panel */}
-        <div className="w-1/2 p-10 flex flex-col justify-center">
+        {/* Right Panel (Auth Form) */}
+        <div
+          className={`w-1/2 p-10 flex flex-col justify-center 
+            transition-transform duration-500 ease-in-out ${
+            isSignUp ? "translate-x-full md:translate-x-0" : "translate-x-0"
+          } absolute md:relative w-full md:w-1/2`}
+        > {/* FIX: Closing backtick was missing before this closing `}` */}
           <h2 className="text-3xl font-bold text-teal-500 mb-4">
             {isSignUp ? "Create Account" : "Sign In"}
           </h2>
@@ -83,18 +100,35 @@ const AuthPage = () => {
               className="w-full border rounded px-4 py-2"
               required
             />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              onChange={handleChange}
-              value={formData.password}
-              className="w-full border rounded px-4 py-2"
-              required
-            />
+            {/* Password input with toggle */}
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                onChange={handleChange}
+                value={formData.password}
+                className="w-full border rounded px-4 py-2 pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+              >
+                {showPassword ? (
+                  <span>👁️‍🗨️</span>
+                ) : (
+                  <span>👁️</span>
+                )}
+              </button>
+            </div>
 
             {error && (
-              <p className={`text-sm ${error.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>
+              <p className={`text-sm flex items-center ${error.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>
+                <span className="mr-2">
+                    {error.startsWith("✅") ? "✔️" : "❌"}
+                </span>
                 {error}
               </p>
             )}
